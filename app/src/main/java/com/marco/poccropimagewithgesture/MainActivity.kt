@@ -18,11 +18,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             POCCropImageWithGestureTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                        MainScreenFactory(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                    MainScreenFactory(
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }

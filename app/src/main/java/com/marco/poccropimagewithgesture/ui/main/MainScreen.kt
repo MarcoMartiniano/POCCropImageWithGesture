@@ -57,12 +57,6 @@ fun MainScreen(
     // Define the size of the crop square (in pixels)
     val cropSquareSize = 500f
 
-    // Variable to store the cropped image bitmap
-//    var imageBitmapThatICropped by remember { mutableStateOf<Bitmap?>(null) }
-
-    // Define the initial position of the draggable rectangle
-    var rectPosition by remember { mutableStateOf(Offset(0f, 0f)) }
-
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -98,7 +92,6 @@ fun MainScreen(
                 boxSize = boxSize,
                 squareSize = cropSquareSize,
                 onRectanglePositionChanged = { newPosition ->
-                    rectPosition = newPosition
                     viewState.offset = newPosition
                     action(MainViewAction.Gesture.SetOffset(offset = newPosition))
                 },

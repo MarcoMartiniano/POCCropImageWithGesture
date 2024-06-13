@@ -34,6 +34,11 @@ fun DraggableRectangleCanvas(
     val centerX = boxSizeWidth.toPx(density).minus(squareSize).div(2)
     val centerY = boxSizeHeight.toPx(density).minus(squareSize).div(2)
 
+    // Set the initial position of the rectangle if not defined in the state
+    if (state.offset == null) {
+        state.offset = Offset(centerX, centerY)
+    }
+
     // Set the initial position of the rectangle to center if not defined in the state
     var offset by remember { mutableStateOf(state.offset ?: Offset(centerX, centerY)) }
 

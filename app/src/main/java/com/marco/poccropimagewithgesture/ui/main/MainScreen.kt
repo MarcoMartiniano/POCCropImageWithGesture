@@ -58,13 +58,15 @@ fun MainScreen(
     val cropSquareSize = 400f
 
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Load the image bitmap
         val imageBitmap = BitmapFactory.decodeResource(
             LocalContext.current.resources,
-            R.mipmap.darthvader_rectangule
+            R.mipmap.darthvader_rectangule_vertical
         )
         // Get the screen density
         val density = LocalDensity.current
@@ -77,7 +79,8 @@ fun MainScreen(
         val scaledBitmap = rescaleBitmap(
             originalBitmap = imageBitmap,
             widthLimit = widthLimit,
-            heightLimit = heightLimit
+            heightLimit = heightLimit,
+            minimumLimit = cropSquareSize.toInt()
         )
 
         // Define the size of the box equals the size of scaledBitmap

@@ -12,36 +12,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.marco.poccropimagewithgesture.ui.main.MainState
 import com.marco.poccropimagewithgesture.utils.toPx
 
 @Composable
 fun DraggableRectangleCanvas(
-    boxSize: Dp,
+    boxSizeWidth: Dp,
+    boxSizeHeight: Dp,
     squareSize: Float,
     onRectanglePositionChanged: (Offset) -> Unit,
     density: Density,
     state: MainState,
-    imageSize: Dp,
+    style: DrawStyle = Fill,
 ) {
     // Calculate the initial position of the rectangle to center it
-    val center = imageSize.toPx(density).minus(squareSize).div(2)
+    val centerX = boxSizeWidth.toPx(density).minus(squareSize).div(2)
+    val centerY = boxSizeHeight.toPx(density).minus(squareSize).div(2)
 
-    // Set the initial position of the rectangle if not defined in the state
-    if (state.offset == null) {
-        state.offset = Offset(center, center)
-    }
-
-    var offset by remember { mutableStateOf(state.offset ?: Offset(center, center)) }
+    // Set the initial position of the rectangle to center if not defined in the state
+    var offset by remember { mutableStateOf(state.offset ?: Offset(centerX, centerY)) }
 
     Canvas(
         modifier = Modifier
-            .size(width = boxSize, height = boxSize)
+            .size(width = boxSizeWidth, height = boxSizeHeight)
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
@@ -61,7 +59,7 @@ fun DraggableRectangleCanvas(
             color = Color.Red,
             topLeft = offset,
             size = Size(squareSize, squareSize),
-            style = Stroke(width = 2.dp.toPx())
+            style = style
         )
     }
 }

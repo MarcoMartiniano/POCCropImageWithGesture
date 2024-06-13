@@ -1,6 +1,5 @@
 package com.marco.poccropimagewithgesture.ui.main
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import com.marco.poccropimagewithgesture.R
 import com.marco.poccropimagewithgesture.ui.components.DraggableRectangleCanvas
 import com.marco.poccropimagewithgesture.utils.cropImage
+import com.marco.poccropimagewithgesture.utils.intToDp
+import com.marco.poccropimagewithgesture.utils.rescaleBitmap
+import com.marco.poccropimagewithgesture.utils.toPx
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -51,7 +55,7 @@ fun MainScreen(
     val viewState by viewModel.state.collectAsState()
 
     // Define the size of the crop square (in pixels)
-    val cropSquareSize = 500f
+    val cropSquareSize = 400f
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -60,24 +64,31 @@ fun MainScreen(
         // Load the image bitmap
         val imageBitmap = BitmapFactory.decodeResource(
             LocalContext.current.resources,
-            R.mipmap.darthvader
+            R.mipmap.darthvader_rectangule
         )
-
-        // Define the size of the box that will contain the image
-        val boxSize = 300.dp
-
         // Get the screen density
         val density = LocalDensity.current
 
-        // Convert the box size from Dp to pixels
-        val boxSizePx = with(density) { boxSize.toPx().toInt() }
+        // Define the heightLimit and widthLimit of the image
+        val heightLimit = 300.dp.toPx(density).toInt()
+        val widthLimit = screenWidthPercentage(0.7f)
 
-        // Resize the original bitmap to the size of the box
-        val scaledBitmap = Bitmap.createScaledBitmap(imageBitmap, boxSizePx, boxSizePx, true)
+        // Resize the original bitmap to the limit size
+        val scaledBitmap = rescaleBitmap(
+            originalBitmap = imageBitmap,
+            widthLimit = widthLimit,
+            heightLimit = heightLimit
+        )
+
+        // Define the size of the box equals the size of scaledBitmap
+        val boxSizeX = scaledBitmap.width
+        val boxSizeY = scaledBitmap.height
+        val boxSizeXdp = density.intToDp(boxSizeX)
+        val boxSizeYdp = density.intToDp(boxSizeY)
 
         Box(
             modifier = Modifier
-                .size(boxSize)
+                .size(width = boxSizeXdp, height = boxSizeYdp)
                 .background(Color.Yellow)
         ) {
             // Display the resized image
@@ -85,7 +96,8 @@ fun MainScreen(
 
             // Composable that allows dragging a rectangle
             DraggableRectangleCanvas(
-                boxSize = boxSize,
+                boxSizeWidth = boxSizeXdp,
+                boxSizeHeight = boxSizeYdp,
                 squareSize = cropSquareSize,
                 onRectanglePositionChanged = { newPosition ->
                     viewState.offset = newPosition
@@ -93,7 +105,7 @@ fun MainScreen(
                 },
                 density = density,
                 state = viewState,
-                imageSize = boxSize
+                Stroke(width = 2.dp.toPx(density = density))
             )
         }
 
@@ -123,4 +135,11 @@ fun MainScreen(
             }
         }
     }
+}
+
+@Composable
+fun screenWidthPercentage(percentage: Float): Int {
+    val configuration = LocalConfiguration.current
+    val screenWidthPx = configuration.screenWidthDp * percentage * LocalDensity.current.density
+    return screenWidthPx.toInt()
 }

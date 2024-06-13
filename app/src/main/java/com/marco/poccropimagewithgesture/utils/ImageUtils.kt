@@ -42,3 +42,37 @@ fun offsetToRect(
 
     return Rect(left, top, right, bottom)
 }
+
+fun rescaleBitmap(
+    originalBitmap: Bitmap,
+    widthLimit: Int,
+    heightLimit: Int,
+): Bitmap {
+    // originalWidth and originalHeight of the bitmap
+    val originalWidth = originalBitmap.width
+    val originalHeight = originalBitmap.height
+
+    // Calculate the aspect ratio
+    val aspectRatio = originalWidth.toFloat() / originalHeight.toFloat()
+
+    val (newWidth, newHeight) = if (originalWidth > widthLimit || originalHeight > heightLimit) {
+        // Image exceeds limits, calculate new dimensions
+        if (originalWidth.toFloat() / widthLimit > originalHeight.toFloat() / heightLimit) {
+            // Width limit hit first
+            widthLimit to (widthLimit / aspectRatio).toInt()
+        } else {
+            // Height limit hit first
+            (heightLimit * aspectRatio).toInt() to heightLimit
+        }
+    } else {
+        // Image is smaller than both limits, scale up to fit within limits
+        if (widthLimit.toFloat() / originalWidth > heightLimit.toFloat() / originalHeight) {
+            // Scale by height
+            (heightLimit * aspectRatio).toInt() to heightLimit
+        } else {
+            // Scale by width
+            widthLimit to (widthLimit / aspectRatio).toInt()
+        }
+    }
+    return Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+}

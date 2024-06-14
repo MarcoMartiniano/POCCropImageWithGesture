@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import com.marco.poccropimagewithgesture.ui.main.MainState
 import com.marco.poccropimagewithgesture.utils.toPx
 
 @Composable
@@ -30,7 +29,7 @@ fun DraggableRectangleCanvas(
     squareSize: Float,
     onRectanglePositionChanged: (Offset) -> Unit,
     density: Density,
-    state: MainState,
+    offsetState: Offset?,
     smallSquareSizeRatio: Float, // 0f to 1f
     style: DrawStyle = Fill,
 ) {
@@ -38,13 +37,8 @@ fun DraggableRectangleCanvas(
     val centerX = boxSizeWidth.toPx(density).minus(squareSize).div(2)
     val centerY = boxSizeHeight.toPx(density).minus(squareSize).div(2)
 
-    // Set the initial position of the rectangle if not defined in the state
-    if (state.offset == null) {
-        state.offset = Offset(centerX, centerY)
-    }
-
     // Remember the current offset and square size
-    var offset by remember { mutableStateOf(state.offset ?: Offset(centerX, centerY)) }
+    var offset by remember { mutableStateOf(offsetState ?: Offset(centerX, centerY)) }
     var currentSquareSize by remember { mutableFloatStateOf(squareSize) }
 
     // Update the square size dynamically and recenter the rectangle

@@ -111,8 +111,8 @@ fun MainScreen(
                         action(MainViewAction.Gesture.SetOffset(offset = newPosition))
                     },
                     density = density,
-                    state = viewState,
-                    smallSquareSizeRatio = 0.25f,
+                    offsetState = viewState.offset,
+                    smallSquareSizeRatio = 0.15f,
                     style = Stroke(width = 2.dp.toPx(density = density))
                 )
             }

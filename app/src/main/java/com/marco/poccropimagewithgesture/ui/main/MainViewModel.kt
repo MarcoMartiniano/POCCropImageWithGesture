@@ -3,8 +3,6 @@ package com.marco.poccropimagewithgesture.ui.main
 import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
-import com.marco.poccropimagewithgesture.ui.main.MainState
-import com.marco.poccropimagewithgesture.ui.main.MainViewAction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,6 +16,15 @@ class MainViewModel : ViewModel() {
         when (viewAction) {
             is MainViewAction.Crop.Image -> updateCroppedBitmap(croppedBitmap = viewAction.croppedBitmap)
             is MainViewAction.Gesture.SetOffset -> updateGestureOffset(offset = viewAction.offset)
+            is MainViewAction.Crop.SquareSize -> updateCropSquareSize(cropSquareSize = viewAction.cropSquareSize)
+        }
+    }
+
+    private fun updateCropSquareSize(cropSquareSize: Float) {
+        _state.update {
+            it.copy(
+                cropSquareSize = cropSquareSize,
+            )
         }
     }
 

@@ -1,11 +1,14 @@
 package com.marco.poccropimagewithgesture.ui.main
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -54,8 +57,7 @@ fun MainScreen(
     // Observe the ViewModel state
     val viewState by viewModel.state.collectAsState()
 
-    // Define the size of the crop square (in pixels)
-    val cropSquareSize = 400f
+    var scaledBitmap: Bitmap?
 
     Column(
         modifier = modifier
@@ -66,7 +68,7 @@ fun MainScreen(
         // Load the image bitmap
         val imageBitmap = BitmapFactory.decodeResource(
             LocalContext.current.resources,
-            R.mipmap.darthvader_rectangule_vertical
+            R.mipmap.darthvader_rectangule_horizontal
         )
         // Get the screen density
         val density = LocalDensity.current
@@ -76,54 +78,110 @@ fun MainScreen(
         val widthLimit = screenWidthPercentage(0.7f)
 
         // Resize the original bitmap to the limit size
-        val scaledBitmap = rescaleBitmap(
+        scaledBitmap = rescaleBitmap(
             originalBitmap = imageBitmap,
             widthLimit = widthLimit,
             heightLimit = heightLimit,
-            minimumLimit = cropSquareSize.toInt()
+            minimumLimit = viewState.cropSquareSize.toInt()
         )
 
-        // Define the size of the box equals the size of scaledBitmap
-        val boxSizeX = scaledBitmap.width
-        val boxSizeY = scaledBitmap.height
-        val boxSizeXdp = density.intToDp(boxSizeX)
-        val boxSizeYdp = density.intToDp(boxSizeY)
+        // Handle the case where scaledBitmap might be null
+        scaledBitmap?.let { nonNullScaledBitmap ->
+            // Define the size of the box equals the size of scaledBitmap
+            val boxSizeX = nonNullScaledBitmap.width
+            val boxSizeY = nonNullScaledBitmap.height
+            val boxSizeXdp = density.intToDp(boxSizeX)
+            val boxSizeYdp = density.intToDp(boxSizeY)
 
-        Box(
-            modifier = Modifier
-                .size(width = boxSizeXdp, height = boxSizeYdp)
-                .background(Color.Yellow)
-        ) {
-            // Display the resized image
-            Image(bitmap = scaledBitmap.asImageBitmap(), contentDescription = "")
+            Box(
+                modifier = Modifier
+                    .size(width = boxSizeXdp, height = boxSizeYdp)
+                    .background(Color.Yellow)
+            ) {
+                // Display the resized image
+                Image(bitmap = nonNullScaledBitmap.asImageBitmap(), contentDescription = "")
 
-            // Composable that allows dragging a rectangle
-            DraggableRectangleCanvas(
-                boxSizeWidth = boxSizeXdp,
-                boxSizeHeight = boxSizeYdp,
-                squareSize = cropSquareSize,
-                onRectanglePositionChanged = { newPosition ->
-                    viewState.offset = newPosition
-                    action(MainViewAction.Gesture.SetOffset(offset = newPosition))
-                },
-                density = density,
-                state = viewState,
-                Stroke(width = 2.dp.toPx(density = density))
-            )
+                // Composable that allows dragging a rectangle
+                DraggableRectangleCanvas(
+                    boxSizeWidth = boxSizeXdp,
+                    boxSizeHeight = boxSizeYdp,
+                    squareSize = viewState.cropSquareSize,
+                    onRectanglePositionChanged = { newPosition ->
+                        viewState.offset = newPosition
+                        action(MainViewAction.Gesture.SetOffset(offset = newPosition))
+                    },
+                    density = density,
+                    state = viewState,
+                    Stroke(width = 2.dp.toPx(density = density))
+                )
+            }
         }
 
-        // Crop button
-        Button(onClick = {
-            // Crop the image based on the rectangle position and size
-            val croppedBitmap = cropImage(
-                imageBitmap = scaledBitmap,
-                squareSize = cropSquareSize,
-                offset = viewState.offset
-            )
-            // Set the cropped image bitmap
-            action(MainViewAction.Crop.Image(croppedBitmap = croppedBitmap))
-        }) {
-            Text("Crop Image")
+        Row {
+            // Reduce button cropSquareSize
+            Button(
+                onClick = {
+                    // Limit the minimum to 180f
+                    if (viewState.cropSquareSize > 180f) {
+                        action(
+                            MainViewAction.Crop.SquareSize(
+                                cropSquareSize = viewState.cropSquareSize.minus(10f)
+                            )
+                        )
+                    }
+                },
+                modifier = Modifier.padding(vertical = 12.dp)
+            ) {
+                Text("Reduce")
+            }
+            // Crop button
+            Button(
+                onClick = {
+                    // Crop the image based on the rectangle position and size
+                    scaledBitmap?.let { nonNullScaledBitmap ->
+                        val croppedBitmap = cropImage(
+                            imageBitmap = nonNullScaledBitmap,
+                            squareSize = viewState.cropSquareSize,
+                            offset = viewState.offset
+                        )
+                        // Set the cropped image bitmap
+                        action(MainViewAction.Crop.Image(croppedBitmap = croppedBitmap))
+                    }
+                },
+                modifier = Modifier.padding(vertical = 12.dp)
+            ) {
+                Text("Crop Img")
+            }
+            // Increase button cropSquareSize
+            Button(
+                onClick = {
+                    val increment = 10f
+                    val smaller = scaledBitmap.let { bitmap ->
+                        val width = bitmap?.width ?: 0
+                        val height = bitmap?.height ?: 0
+                        if (width > height) bitmap?.height else bitmap?.width
+                    } ?: 0
+                    // When did not reach the cropSquare border, still increasing
+                    if (viewState.cropSquareSize.plus(increment) < smaller) {
+                        action(
+                            MainViewAction.Crop.SquareSize(
+                                cropSquareSize = viewState.cropSquareSize.plus(increment)
+                            )
+                        )
+                    }
+                    // When did not reach the cropSquare border but has some space between smaller than increment
+                    else if (viewState.cropSquareSize != smaller.toFloat()) {
+                        action(
+                            MainViewAction.Crop.SquareSize(
+                                cropSquareSize = smaller.toFloat()
+                            )
+                        )
+                    }
+                },
+                modifier = Modifier.padding(vertical = 12.dp)
+            ) {
+                Text("Increase")
+            }
         }
 
         // Column to display the cropped image

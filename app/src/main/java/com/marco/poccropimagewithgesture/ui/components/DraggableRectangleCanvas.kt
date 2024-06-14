@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,8 +41,20 @@ fun DraggableRectangleCanvas(
         state.offset = Offset(centerX, centerY)
     }
 
-    // Set the initial position of the rectangle to center if not defined in the state
+    // Remember the current offset and square size
     var offset by remember { mutableStateOf(state.offset ?: Offset(centerX, centerY)) }
+    var currentSquareSize by remember { mutableFloatStateOf(squareSize) }
+
+    // Update the square size dynamically and recenter the rectangle
+    LaunchedEffect(squareSize) {
+        currentSquareSize = squareSize
+        offset = Offset(
+            x = boxSizeWidth.toPx(density).minus(currentSquareSize).div(2),
+            y = boxSizeHeight.toPx(density).minus(currentSquareSize).div(2)
+        )
+        // Callback to notify the new position
+        onRectanglePositionChanged(offset)
+    }
 
     Canvas(
         modifier = Modifier
@@ -48,22 +62,22 @@ fun DraggableRectangleCanvas(
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    // Calculate the new position of the rectangle with constraints
+                    // Calculate the new position of the rectangle with constraints based on current square size
                     val newOffset = offset + dragAmount
                     offset = Offset(
-                        x = newOffset.x.coerceIn(0f, size.width - squareSize),
-                        y = newOffset.y.coerceIn(0f, size.height - squareSize)
+                        x = newOffset.x.coerceIn(0f, size.width - currentSquareSize),
+                        y = newOffset.y.coerceIn(0f, size.height - currentSquareSize)
                     )
                     // Callback to notify the new position
                     onRectanglePositionChanged(offset)
                 }
             }
     ) {
-        // Draw the rectangle at the current offset
+        // Draw the rectangle at the current offset with the current square size
         drawRect(
             color = Color.Red,
             topLeft = offset,
-            size = Size(squareSize, squareSize),
+            size = Size(currentSquareSize, currentSquareSize),
             style = style
         )
     }

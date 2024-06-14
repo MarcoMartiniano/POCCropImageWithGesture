@@ -112,7 +112,8 @@ fun MainScreen(
                     },
                     density = density,
                     state = viewState,
-                    Stroke(width = 2.dp.toPx(density = density))
+                    smallSquareSizeRatio = 0.25f,
+                    style = Stroke(width = 2.dp.toPx(density = density))
                 )
             }
         }

@@ -16,6 +16,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -30,6 +31,7 @@ fun DraggableRectangleCanvas(
     onRectanglePositionChanged: (Offset) -> Unit,
     density: Density,
     state: MainState,
+    smallSquareSizeRatio: Float, // 0f to 1f
     style: DrawStyle = Fill,
 ) {
     // Calculate the initial position of the rectangle to center it
@@ -73,12 +75,35 @@ fun DraggableRectangleCanvas(
                 }
             }
     ) {
-        // Draw the rectangle at the current offset with the current square size
+        // Draw the main rectangle at the current offset with the current square size
         drawRect(
             color = Color.Red,
             topLeft = offset,
             size = Size(currentSquareSize, currentSquareSize),
             style = style
         )
+
+        // Calculate the size of the small squares based on the ratio
+        val smallSquareSize = currentSquareSize * smallSquareSizeRatio
+        val numSquares = (currentSquareSize / smallSquareSize).toInt()
+
+        // Adjust smallSquareSize to fit perfectly within the main rectangle
+        val adjustedSquareSize = currentSquareSize / numSquares
+
+        // Draw the checkerboard pattern inside the main rectangle
+        for (i in 0 until numSquares) {
+            for (j in 0 until numSquares) {
+                val topLeft = Offset(
+                    x = offset.x + i * adjustedSquareSize,
+                    y = offset.y + j * adjustedSquareSize
+                )
+                drawRect(
+                    color = Color.Red,
+                    topLeft = topLeft,
+                    size = Size(adjustedSquareSize, adjustedSquareSize),
+                    style = Stroke(width = 2f) // Stroke style to draw only the border
+                )
+            }
+        }
     }
 }

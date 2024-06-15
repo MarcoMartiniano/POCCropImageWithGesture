@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +29,7 @@ import com.marco.poccropimagewithgesture.ui.components.DraggableRectangleCanvas
 import com.marco.poccropimagewithgesture.utils.cropImage
 import com.marco.poccropimagewithgesture.utils.intToDp
 import com.marco.poccropimagewithgesture.utils.rescaleBitmap
+import com.marco.poccropimagewithgesture.utils.screenWidthPercentage
 import com.marco.poccropimagewithgesture.utils.toPx
 import org.koin.androidx.compose.koinViewModel
 
@@ -197,11 +197,4 @@ fun MainScreen(
             }
         }
     }
-}
-
-@Composable
-fun screenWidthPercentage(percentage: Float): Int {
-    val configuration = LocalConfiguration.current
-    val screenWidthPx = configuration.screenWidthDp * percentage * LocalDensity.current.density
-    return screenWidthPx.toInt()
 }

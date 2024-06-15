@@ -18,9 +18,14 @@ import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.marco.poccropimagewithgesture.utils.roundToFirstDecimalPlace
 import com.marco.poccropimagewithgesture.utils.toPx
+
 
 @Composable
 fun DraggableRectangleCanvas(
@@ -30,12 +35,12 @@ fun DraggableRectangleCanvas(
     onRectanglePositionChanged: (Offset) -> Unit,
     density: Density,
     offsetState: Offset?,
-    smallSquareSizeRatio: Float, // 0f to 1f
     style: DrawStyle = Fill,
+    smallSquareSizeRatio: Float, // 0f to 1f
 ) {
     // Calculate the initial position of the rectangle to center it
-    val centerX = boxSizeWidth.toPx(density).minus(squareSize).div(2)
-    val centerY = boxSizeHeight.toPx(density).minus(squareSize).div(2)
+    val centerX = (boxSizeWidth.toPx(density) - squareSize) / 2
+    val centerY = (boxSizeHeight.toPx(density) - squareSize) / 2
 
     // Remember the current offset and square size
     var offset by remember { mutableStateOf(offsetState ?: Offset(centerX, centerY)) }
@@ -45,8 +50,8 @@ fun DraggableRectangleCanvas(
     LaunchedEffect(squareSize) {
         currentSquareSize = squareSize
         offset = Offset(
-            x = boxSizeWidth.toPx(density).minus(currentSquareSize).div(2),
-            y = boxSizeHeight.toPx(density).minus(currentSquareSize).div(2)
+            x = offset.x.coerceIn(0f, boxSizeWidth.toPx(density) - currentSquareSize),
+            y = offset.y.coerceIn(0f, boxSizeHeight.toPx(density) - currentSquareSize)
         )
         // Callback to notify the new position
         onRectanglePositionChanged(offset)
@@ -84,20 +89,47 @@ fun DraggableRectangleCanvas(
         // Adjust smallSquareSize to fit perfectly within the main rectangle
         val adjustedSquareSize = currentSquareSize / numSquares
 
-        // Draw the checkerboard pattern inside the main rectangle
-        for (i in 0 until numSquares) {
-            for (j in 0 until numSquares) {
+        // Calculate the number of squares
+        val numSquaresX = (currentSquareSize / adjustedSquareSize).toInt()
+        val numSquaresY = (currentSquareSize / adjustedSquareSize).toInt()
+
+        for (i in 0..numSquaresX) {
+            for (j in 0..numSquaresY) {
                 val topLeft = Offset(
                     x = offset.x + i * adjustedSquareSize,
                     y = offset.y + j * adjustedSquareSize
                 )
-                drawRect(
-                    color = Color.Red,
-                    topLeft = topLeft,
-                    size = Size(adjustedSquareSize, adjustedSquareSize),
-                    style = Stroke(width = 2f) // Stroke style to draw only the border
-                )
+                val adjustOffsetX = (topLeft.x + adjustedSquareSize).roundToFirstDecimalPlace()
+                val adjustOffsetY = (topLeft.y + adjustedSquareSize).roundToFirstDecimalPlace()
+
+                val currentOffsetX = (offset.x + currentSquareSize).roundToFirstDecimalPlace()
+                val currentOffsetY = (offset.y + currentSquareSize).roundToFirstDecimalPlace()
+
+                // Ensure we only draw inside the main rectangle
+                if (adjustOffsetX <= currentOffsetX && adjustOffsetY <= currentOffsetY) {
+                    drawRect(
+                        color = Color.Red,
+                        topLeft = topLeft,
+                        size = Size(adjustedSquareSize, adjustedSquareSize),
+                        style = Stroke(width = 2f) // Stroke style to draw only the border
+                    )
+                }
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewDraggableRectangleCanvas() {
+    DraggableRectangleCanvas(
+        boxSizeWidth = 300.dp,
+        boxSizeHeight = 300.dp,
+        squareSize = 100f,
+        onRectanglePositionChanged = {},
+        density = LocalDensity.current,
+        offsetState = null,
+        style = Stroke(width = 2f),
+        smallSquareSizeRatio = 0.15f,
+    )
 }
